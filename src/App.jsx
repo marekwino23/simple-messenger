@@ -8,7 +8,7 @@ const App = () => {
   const [message, setMessage] = useState("")
   const [username, setUsername] = useState("")
   const [room, setRoom] = useState("")
-  const [messageList, setMessageList] = useState([])
+  const [messageList, setMessageList] = useState([]);
   const [loggedIn, setLoggedin] = useState(false)
 
   const changeMessage = (e) => {
@@ -20,7 +20,6 @@ const App = () => {
 
   const changeRoom = (e) => {
     setRoom(e.target.value)
-    console.log(room)
   }
 
   const exitRoom = () => {
@@ -29,13 +28,6 @@ const App = () => {
 
   useEffect(() => {
     socket = io(`localhost:${CONNECTION_PORT}`);
-    // return () => socket.curentdisconnect();
-  },[]);
-
-  useEffect(() => {
-    socket.on("receive_message", data => {
-      console.log(data)
-    });
   },[]);
 
   const connectToRoom = () => {
@@ -45,8 +37,7 @@ const App = () => {
     }
     else{
       console.log("empty")
-    }
-   
+    }  
   }
 
   const sendMessage = () => {
@@ -57,15 +48,19 @@ const App = () => {
         message: message,
       },
     };
-
-    socket.emit("send_message", messageList, messageContent)
-    setMessageList([...messageList, messageContent.content])
-    setMessage("")
-  }
+    socket.emit("send_message", messageContent)
+    // setMessageList([...messageList, messageContent.content])
+    socket.on("receive_message", (messages) => {
+      console.log( "data", messages)
+      setMessageList(messages);
+      console.log(messageList)
+    })
+    }
   
   // if(!socket) {
   //   return null;
   // }
+  console.log('messagesList: ', messageList);
   return (
       <div>
         {!loggedIn ? (
@@ -81,12 +76,20 @@ const App = () => {
         <button onClick={connectToRoom}>Enter</button>
       </div>)
    :(
-     <div>
-     <h1 style={{color:"green"}}>You are logged in {room} <button onClick={exitRoom} className="exit">exit</button></h1>
+     <div className="message_container">
+     <h1 style={{color:"green"}}>You are logged in {room} <button onClick={exitRoom} className="exit">Exit</button></h1>
     <input onChange={changeMessage} placeholder="message..." type="text"/>
    <button onClick={sendMessage}>Send</button>
    <br></br>
    <br></br>
+
+   {messageList.map((message) => {
+     return(
+       <div>
+      <li key={message.id}>{message.content.author === username ? 'Ja' : message.content.author}: {message.content.message}</li>
+      </div>
+     )
+   })}
      </div>)}
      </div>
 
